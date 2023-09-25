@@ -1,3 +1,6 @@
+#ifndef serial_h
+#define serial_h
+
 #ifndef F_CPU
 #define F_CPU 16000000UL
 #endif
@@ -11,3 +14,5 @@ void uart_init(void);
 void uart_write(char c);
 char uart_read(void);
 void uart_println(char *s);
+
+#endif 
