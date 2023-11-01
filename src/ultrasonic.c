@@ -17,19 +17,19 @@ float readSensor(unsigned char numSensor)
     switch (numSensor)
     {
     case forward_sensor:
-        trigPin = echoPin_F;
+        trigPin = trigPin_F;
         echoPin = echoPin_F;
         break;
     case backward_sensor:
-        trigPin = echoPin_B;
+        trigPin = trigPin_B;
         echoPin = echoPin_B;
         break;
     case right_sensor:
-        trigPin = echoPin_R;
+        trigPin = trigPin_R;
         echoPin = echoPin_R;
         break;
     case left_sensor:
-        trigPin = echoPin_L;
+        trigPin = trigPin_L;
         echoPin = echoPin_L;
         break;
     default:
@@ -51,5 +51,5 @@ float readSensor(unsigned char numSensor)
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
     return  distanceToTarget;
-    
+
 }
