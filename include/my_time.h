@@ -1,5 +1,5 @@
-#ifndef time_h
-#define time_h
+#ifndef my_time_h
+#define my_time_h
 
 #define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
