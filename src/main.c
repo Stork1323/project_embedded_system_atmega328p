@@ -8,6 +8,7 @@
 #include "ultrasonic.h"
 #include <time.h>
 #include "my_time.h"
+#include "motor.h"
 
 #define radius 20   // the minimum distance to run spiral algorithm
 #define R3 3     // forward sensor
@@ -19,7 +20,7 @@
 #define time_sp_max 10 // max time to complete a circle in spriral mode 
 
 //#define dir 1  // used to adjust the direction of robot
-#define SPEED_MAX 128
+#define SPEED_MAX 100
 
 char *ulong_to_char(unsigned long num){
     char buffer [128];
@@ -40,6 +41,8 @@ int main(void){
 
     uart_init(); // using to debug
     init_ultrasonic();
+    motor_init();
+    
     
     time_t time_v;
     srand((unsigned) time(&time_v));  // initialize random number generator
