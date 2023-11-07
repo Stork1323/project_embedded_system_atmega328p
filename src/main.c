@@ -95,6 +95,7 @@ int main(void){
             check_register |= (1 << R0);
         }
         if (check_register == 0x0F){ // check the area 
+            motor_run(0, 0);
             goto spiral_mode;
         }
         //------------------------------------
@@ -105,8 +106,8 @@ int main(void){
             time_ran *= 100; // convert 0ms to 1500ms 
             int start_r;
             start_r = millis();
-            motor_run(0, SPEED_MAX);
-            while (millis() - start_r > time_ran){ // random turn
+            motor_run(0, SPEED_MAX/10);
+            while (millis() - start_r < time_ran){ // random turn
             };
             motor_run(0,0); // stop turnning to measure
             dis_forward = readSensor(forward_sensor);
