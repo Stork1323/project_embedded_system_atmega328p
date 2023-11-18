@@ -20,6 +20,7 @@ float readSensor(unsigned char numSensor)
 {
     static unsigned long timeout = 40000UL;
     static unsigned long time;
+        float pingTravelDistance, distanceToTarget;
 
     switch (numSensor)
     {
@@ -55,7 +56,7 @@ float readSensor(unsigned char numSensor)
     while((micros() - previousMicros) <= timeout && (PIND & (1 << echoPin))); // wait for the echo pin low or timeout
     time = micros() - previousMicros;
     _delay_ms(25);
-    float pingTravelDistance, distanceToTarget;
+
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
 
@@ -71,7 +72,6 @@ float readSensor(unsigned char numSensor)
     while((micros() - previousMicros) <= timeout && (PINC & (1 << echoPin))); // wait for the echo pin low or timeout
     time = micros() - previousMicros;
     _delay_ms(25);
-    float pingTravelDistance, distanceToTarget;
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
 

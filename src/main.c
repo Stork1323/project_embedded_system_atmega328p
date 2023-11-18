@@ -16,7 +16,7 @@
 #define R1 1    // backward sensor
 #define R0 0    // left sensor
 
-#define button 2 // select mode PC2
+#define switch 7 // select mode PD7
 #define led 3 // PC3
 
 #define pi 3.14159
@@ -24,6 +24,9 @@
 
 //#define dir 1  // used to adjust the direction of robot
 #define SPEED_MAX 100
+
+// initial mode
+    unsigned int mode_servo = 0;
 
 char *ulong_to_char(unsigned long num){
     char buffer [128];
@@ -34,12 +37,32 @@ char *ulong_to_char(unsigned long num){
 
 void motor_run(unsigned char speed1, unsigned char speed2); // speed1: adjust speed of left wheel; speed2: adjust speed of right wheel
 
+void init_pinchangeinterrupt(){
+    PORTC |= (1 << switch);
+    PCICR |= (1 << PCIE2);
+    PCMSK2 |= (1 << PCINT23);
+    sei();
+}
+ISR(PCINT2_vect){
+    mode_servo = 1 - mode_servo;
+    if (mode_servo == 1){
+        servo(4820);
+        _delay_ms(10);
+        PORTC |= (1 << led);
+    }
+    else {
+        servo(2890);
+        _delay_ms(10);
+        PORTC &= ~(1 << led);
+    }
+    reti();
+}
 
 int main(void){
 
     // test power supply 
     DDRC |= (1 << led);
-    DDRC &= ~(1 << button);
+    
     PORTC &= ~(1 << led);
     
     //
@@ -48,6 +71,7 @@ int main(void){
     init_ultrasonic();
     motor_init();
     role_on();
+    init_pinchangeinterrupt();
     
     
     time_t time_v;
@@ -79,27 +103,10 @@ int main(void){
     motor_run(speed_wheel1, speed_wheel2);
     int time_ran; // variable to get random time
 
-    // initial mode
-    unsigned int mode_servo = 0;
+    
 
     while (1) {
 
-        if (PINC & (1 << button) == 0){
-            _delay_ms(10);
-            if (PINC & (1 << button) == 0){
-                mode_servo = 1 - mode_servo;
-                if (mode_servo == 1){
-                    servo(4820);
-                    _delay_ms(10);
-                    PORTC |= (1 << led);
-                }
-                else {
-                    servo(2890);
-                    _delay_ms(10);
-                    PORTC &= ~(1 << led);
-                }
-            }
-        }
 
         // read distance from sensors
         dis_forward = readSensor(forward_sensor);
