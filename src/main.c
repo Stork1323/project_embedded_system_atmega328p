@@ -16,6 +16,9 @@
 #define R1 1    // backward sensor
 #define R0 0    // left sensor
 
+#define button 2 // select mode PC2
+#define led 3 // PC3
+
 #define pi 3.14159
 #define time_sp_max 10 // max time to complete a circle in spriral mode 
 
@@ -35,13 +38,16 @@ void motor_run(unsigned char speed1, unsigned char speed2); // speed1: adjust sp
 int main(void){
 
     // test power supply 
-    DDRD |= (1 << DDD2);
-    PORTD |= (1 << PD2);
+    DDRC |= (1 << led);
+    DDRC &= ~(1 << button);
+    PORTC &= ~(1 << led);
+    
     //
 
     uart_init(); // using to debug
     init_ultrasonic();
     motor_init();
+    role_on();
     
     
     time_t time_v;
@@ -73,7 +79,28 @@ int main(void){
     motor_run(speed_wheel1, speed_wheel2);
     int time_ran; // variable to get random time
 
+    // initial mode
+    unsigned int mode_servo = 0;
+
     while (1) {
+
+        if (PINC & (1 << button) == 0){
+            _delay_ms(10);
+            if (PINC & (1 << button) == 0){
+                mode_servo = 1 - mode_servo;
+                if (mode_servo == 1){
+                    servo(4820);
+                    _delay_ms(10);
+                    PORTC |= (1 << led);
+                }
+                else {
+                    servo(2890);
+                    _delay_ms(10);
+                    PORTC &= ~(1 << led);
+                }
+            }
+        }
+
         // read distance from sensors
         dis_forward = readSensor(forward_sensor);
         dis_right = readSensor(right_sensor);

@@ -1,16 +1,10 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
-#include <motor.h>
+#include "motor.h"
 
-#define PWM1_PIN 3 //pd3
-#define PWM2_PIN 3 //pb3
-#define IN1 4
-#define IN3 5
-#define role_pin 0
-//#define uint8_t unsigned char 
-typedef unsigned char uint8_t;
-//typedef unsigned short int uint16_t;
+
+
 void timer1_init()
 {
     TCCR1A |= (1<< WGM10) | (1<< WGM11);
@@ -41,12 +35,13 @@ void timer0_init()
 }
 void role_on()
 {
-    PORTC |= (1<< role_pin);
+    DDRB |= (1 << role_pin);
+    PORTB |= (1<< role_pin);
     _delay_ms(500);
 }
 void role_off()
 {
-    PORTC &= ~(1<< role_pin);
+    PORTB &= ~(1<< role_pin);
     _delay_ms(500);
 }
 void motor_init()

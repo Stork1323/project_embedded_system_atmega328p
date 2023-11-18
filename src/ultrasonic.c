@@ -3,10 +3,17 @@
 #include "my_time.h"
 #include "ultrasonic.h"
 
+// forward_sensor = pc0 pc1
+// right_sensor = pd0 pd1
+// backward_sensor = pd2 pd3
+// left_sensor = pd4 pd5
+
 void init_ultrasonic(){
     init(); // init timer0 to use millis() and micros() function in time.h
-    DDRB |= (1 << DDB0) | (1 << DDB2) | (1 << DDB4) | (1 << DDB6); // set output for trigger pin
-    DDRB &= ~((1 << DDB1) | (1 << DDB3) | (1 << DDB5) | (1 << DDB7)); // set input for echo pin
+    DDRD |= (1 << DDD0) | (1 << DDD2) | (1 << DDD4); // set output for trigger pin
+    DDRD &= ~((1 << DDD1) | (1 << DDD3) | (1 << DDD5)); // set input for echo pin
+    DDRC |= (1 << DDC0);
+    DDRC &= ~(1 << DDC1);
 }
 
 float readSensor(unsigned char numSensor)
@@ -19,6 +26,7 @@ float readSensor(unsigned char numSensor)
     case forward_sensor:
         trigPin = trigPin_F;
         echoPin = echoPin_F;
+        goto switch_port;
         break;
     case backward_sensor:
         trigPin = trigPin_B;
@@ -36,20 +44,37 @@ float readSensor(unsigned char numSensor)
         break;
     }
 
-    PORTB &= ~(1 << trigPin);
+    PORTD &= ~(1 << trigPin);
     _delay_us(10);
-    PORTB |= (1 << trigPin);
+    PORTD |= (1 << trigPin);
     _delay_us(10);
-    PORTB &= ~(1 << trigPin);
+    PORTD &= ~(1 << trigPin);
     previousMicros = micros();
-    while((micros() - previousMicros) <= timeout && !(PINB & (1 << echoPin))); //wait for the echo pin high or timeout
+    while((micros() - previousMicros) <= timeout && !(PIND & (1 << echoPin))); //wait for the echo pin high or timeout
     previousMicros = micros();
-    while((micros() - previousMicros) <= timeout && (PINB & (1 << echoPin))); // wait for the echo pin low or timeout
+    while((micros() - previousMicros) <= timeout && (PIND & (1 << echoPin))); // wait for the echo pin low or timeout
     time = micros() - previousMicros;
     _delay_ms(25);
     float pingTravelDistance, distanceToTarget;
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
+
+    switch_port:
+    PORTC &= ~(1 << trigPin);
+    _delay_us(10);
+    PORTC |= (1 << trigPin);
+    _delay_us(10);
+    PORTC &= ~(1 << trigPin);
+    previousMicros = micros();
+    while((micros() - previousMicros) <= timeout && !(PINC & (1 << echoPin))); //wait for the echo pin high or timeout
+    previousMicros = micros();
+    while((micros() - previousMicros) <= timeout && (PINC & (1 << echoPin))); // wait for the echo pin low or timeout
+    time = micros() - previousMicros;
+    _delay_ms(25);
+    float pingTravelDistance, distanceToTarget;
+    pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
+    distanceToTarget = pingTravelDistance/2;
+
     return  distanceToTarget;
 
 }
