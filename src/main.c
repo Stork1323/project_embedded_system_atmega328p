@@ -17,10 +17,10 @@
 #define R0 0    // left sensor
 
 #define switch 7 // select mode PD7
-#define led 3 // PC3
+#define led 4 // PC4
 
 #define pi 3.14159
-#define time_sp_max 10 // max time to complete a circle in spriral mode 
+#define time_sp_max 100 // max time to complete a circle in spriral mode 
 
 //#define dir 1  // used to adjust the direction of robot
 #define SPEED_MAX 100
@@ -47,15 +47,17 @@ ISR(PCINT2_vect){
     mode_servo = 1 - mode_servo;
     if (mode_servo == 1){
         servo(4820);
+        uart_println("on");
         _delay_ms(10);
         PORTC |= (1 << led);
     }
     else {
         servo(2890);
+        uart_println("of");
         _delay_ms(10);
         PORTC &= ~(1 << led);
     }
-    reti();
+    //reti();
 }
 
 int main(void){
@@ -72,6 +74,7 @@ int main(void){
     motor_init();
     role_on();
     init_pinchangeinterrupt();
+    init();
     
     
     time_t time_v;
@@ -98,6 +101,29 @@ int main(void){
     float dis_right; // distance that right sensor measured
     float dis_backward; // distance that backward sensor measured
     float dis_left; // distance that left sensor measured
+
+    // testing
+    // while (1){
+    //     dis_forward = readSensor(forward_sensor);
+    //     dis_right = readSensor(right_sensor);
+    //     dis_backward = readSensor(backward_sensor);
+    //     dis_left = readSensor(left_sensor);
+    //     uart_println("forward: ");
+    //     uart_println(ulong_to_char(dis_forward));
+    //     uart_println("right: ");
+    //     uart_println(ulong_to_char(dis_right));
+    //     uart_println("backward: ");
+    //     uart_println(ulong_to_char(dis_backward));
+    //     uart_println("left: ");
+    //     uart_println(ulong_to_char(dis_left));
+    //     _delay_ms(500);
+    // }
+
+    // while (1){
+    //     motor_run(100, 100);
+    // }
+
+
 
     unsigned char speed_wheel1 = 0, speed_wheel2 = 0;
     motor_run(speed_wheel1, speed_wheel2);
@@ -128,8 +154,13 @@ int main(void){
         if (dis_right >= radius){
             check_register |= (1 << R0);
         }
+
+        // test spiral mode
+        check_register = 0x0F;
+        //
         if (check_register == 0x0F){ // check the area 
             motor_run(0, 0);
+            uart_println("out");
             goto spiral_mode;
         }
         //------------------------------------
@@ -157,24 +188,40 @@ int main(void){
             speed_wheel1 = SPEED_MAX;
             speed_wheel2 = 1;
             motor_run(speed_wheel1, speed_wheel2);
-            int start_sp;
+            unsigned long start_sp;
             start_sp = millis();
             float ratio = speed_wheel2 / speed_wheel1;
             while (1) {
                 dis_forward = readSensor(forward_sensor);
-                if (dis_forward <= 2 || speed_wheel2 >= SPEED_MAX / 2){
+                // if (dis_forward <= 2 || speed_wheel2 >= SPEED_MAX / 2){
+                //     speed_wheel1 = 0;
+                //     speed_wheel2 = 0;
+                //     motor_run(speed_wheel1, speed_wheel2);
+                //     goto random_mode;
+                // }
+
+                // test 
+                if (speed_wheel2 >= SPEED_MAX / 2){
                     speed_wheel1 = 0;
                     speed_wheel2 = 0;
                     motor_run(speed_wheel1, speed_wheel2);
-                    goto random_mode;
+                    break;
                 }
-                if ((millis() - start_sp) >= ratio * 2 * time_sp_max * 1000){
-                    speed_wheel2 += 5;
+                //
+                if ((millis() - start_sp) >= (ratio  * time_sp_max * 1000)){
+                    speed_wheel2 += 2;
                     motor_run(speed_wheel1, speed_wheel2);
+                    uart_println(ulong_to_char(speed_wheel1));
+                    uart_println(ulong_to_char(speed_wheel2));
+                    uart_println("value millis: ");
+                    uart_println(ulong_to_char(millis()));
+                    uart_println("value start: ");
+                    uart_println(ulong_to_char(start_sp));
                     start_sp = millis();
                     ratio = speed_wheel2 / speed_wheel1;
                 }
             }
     }
+    
 
 }

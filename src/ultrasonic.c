@@ -10,8 +10,8 @@
 
 void init_ultrasonic(){
     init(); // init timer0 to use millis() and micros() function in time.h
-    DDRD |= (1 << DDD0) | (1 << DDD2) | (1 << DDD4); // set output for trigger pin
-    DDRD &= ~((1 << DDD1) | (1 << DDD3) | (1 << DDD5)); // set input for echo pin
+    DDRD |= (1 << DDD0) | (1 << DDD2) | (1 << DDD5); // set output for trigger pin
+    DDRD &= ~((1 << DDD1) | (1 << DDD4) | (1 << DDD6)); // set input for echo pin
     DDRC |= (1 << DDC0);
     DDRC &= ~(1 << DDC1);
 }
@@ -36,6 +36,7 @@ float readSensor(unsigned char numSensor)
     case right_sensor:
         trigPin = trigPin_R;
         echoPin = echoPin_R;
+        goto switch_port;
         break;
     case left_sensor:
         trigPin = trigPin_L;
@@ -60,6 +61,8 @@ float readSensor(unsigned char numSensor)
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
 
+    goto exit_switch;
+
     switch_port:
     PORTC &= ~(1 << trigPin);
     _delay_us(10);
@@ -74,6 +77,8 @@ float readSensor(unsigned char numSensor)
     _delay_ms(25);
     pingTravelDistance = (time*765.*5280.*12)/(3600.*1000000);
     distanceToTarget = pingTravelDistance/2;
+
+    exit_switch: 
 
     return  distanceToTarget;
 
