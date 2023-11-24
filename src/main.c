@@ -23,7 +23,7 @@
 #define time_sp_max 100 // max time to complete a circle in spriral mode 
 
 //#define dir 1  // used to adjust the direction of robot
-#define SPEED_MAX 100
+#define SPEED_MAX 200
 
 // initial mode
     unsigned int mode_servo = 0;
@@ -47,13 +47,13 @@ ISR(PCINT2_vect){
     mode_servo = 1 - mode_servo;
     if (mode_servo == 1){
         servo(4820);
-        uart_println("on");
+        uart_println("suck");
         _delay_ms(10);
         PORTC |= (1 << led);
     }
     else {
         servo(2890);
-        uart_println("of");
+        uart_println("blow");
         _delay_ms(10);
         PORTC &= ~(1 << led);
     }
@@ -120,9 +120,8 @@ int main(void){
     // }
 
     // while (1){
-    //     motor_run(100, 100);
+    //     motor_run(SPEED_MAX, SPEED_MAX);
     // }
-
 
 
     unsigned char speed_wheel1 = 0, speed_wheel2 = 0;
@@ -156,11 +155,10 @@ int main(void){
         }
 
         // test spiral mode
-        check_register = 0x0F;
+        // check_register = 0x0F;
         //
         if (check_register == 0x0F){ // check the area 
             motor_run(0, 0);
-            uart_println("out");
             goto spiral_mode;
         }
         //------------------------------------
@@ -171,7 +169,9 @@ int main(void){
             time_ran *= 100; // convert 0ms to 1500ms 
             int start_r;
             start_r = millis();
-            motor_run(0, SPEED_MAX/10);
+            motor_run(0, SPEED_MAX/4);
+
+            
             while (millis() - start_r < time_ran){ // random turn
             };
             motor_run(0,0); // stop turnning to measure
@@ -193,35 +193,33 @@ int main(void){
             float ratio = speed_wheel2 / speed_wheel1;
             while (1) {
                 dis_forward = readSensor(forward_sensor);
-                // if (dis_forward <= 2 || speed_wheel2 >= SPEED_MAX / 2){
-                //     speed_wheel1 = 0;
-                //     speed_wheel2 = 0;
-                //     motor_run(speed_wheel1, speed_wheel2);
-                //     goto random_mode;
-                // }
-
-                // test 
-                if (speed_wheel2 >= SPEED_MAX / 2){
+                if (dis_forward <= 2 || speed_wheel2 >= SPEED_MAX / 2){
                     speed_wheel1 = 0;
                     speed_wheel2 = 0;
                     motor_run(speed_wheel1, speed_wheel2);
-                    break;
+                    goto random_mode;
                 }
+
+                // test 
+                // if (speed_wheel2 >= SPEED_MAX / 2){
+                //     speed_wheel1 = 0;
+                //     speed_wheel2 = 0;
+                //     motor_run(speed_wheel1, speed_wheel2);
+                //     break;
+                // }
                 //
-                if ((millis() - start_sp) >= (ratio  * time_sp_max * 1000)){
+                if ((millis() - start_sp) / 1000 >= speed_wheel2){
                     speed_wheel2 += 2;
                     motor_run(speed_wheel1, speed_wheel2);
-                    uart_println(ulong_to_char(speed_wheel1));
-                    uart_println(ulong_to_char(speed_wheel2));
-                    uart_println("value millis: ");
-                    uart_println(ulong_to_char(millis()));
-                    uart_println("value start: ");
-                    uart_println(ulong_to_char(start_sp));
+                    // uart_println(ulong_to_char(speed_wheel1));
+                    // uart_println(ulong_to_char(speed_wheel2));
+                    // uart_println("value millis: ");
+                    // uart_println(ulong_to_char(millis()));
+                    // uart_println("value start: ");
+                    // uart_println(ulong_to_char(start_sp));
                     start_sp = millis();
                     ratio = speed_wheel2 / speed_wheel1;
                 }
             }
     }
-    
-
 }
