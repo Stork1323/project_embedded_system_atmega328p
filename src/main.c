@@ -228,8 +228,9 @@ int main(void){
         random_mode:
             uart_println("random mode");
             time_ran = rand() % 16; // value from 0 to 15
+            uart_println(ulong_to_char(time_ran));
             time_ran *= 100; // convert 0ms to 1500ms 
-            int start_r;
+            unsigned long start_r;
             start_r = millis();
             motor_run(0, SPEED_MIN);
 
