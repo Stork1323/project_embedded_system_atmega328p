@@ -25,6 +25,8 @@
 
 //#define dir 1  // used to adjust the direction of robot
 #define SPEED_MAX 200
+#define SPEED_MIN 70
+#define delta_speed 5
 
 // initial mode
     unsigned int mode_servo = 0;
@@ -105,6 +107,9 @@ int main(void){
 
     // testing
     // while (1){
+    //     motor_run(SPEED_MAX, 70);
+    // }
+    // while (1){
     //     dis_forward = readSensor(forward_sensor);
     //     dis_right = readSensor(right_sensor);
     //     dis_backward = readSensor(backward_sensor);
@@ -119,18 +124,56 @@ int main(void){
     //     uart_println(ulong_to_char(dis_left));
     //     _delay_ms(100);
     // }
+    // test spiral mode
+    // unsigned char speed_wheel1 = 0, speed_wheel2 = 0;
+    // int counter = 0;
+    // while (1){
+    //     uart_println("spiral mode: ");
+    //     uart_println(ulong_to_char(counter));
+    //     uart_println("---------");
+    //         speed_wheel1 = SPEED_MAX / 2;
+    //         speed_wheel2 = SPEED_MIN;
+    //         motor_run(speed_wheel1, speed_wheel2);
+    //         unsigned long start_sp;
+    //         start_sp = millis();
+    //         float ratio = speed_wheel2 / speed_wheel1;
+    //         while (1) {
+    //             if (speed_wheel2 >= SPEED_MAX){
+    //                 break;
+    //             }
+    //             if (speed_wheel2 >= SPEED_MAX / 2 - 10){
+    //                 speed_wheel1 = SPEED_MAX;
+    //             }
+    //             if ((millis() - start_sp) / 1000 >= speed_wheel2 / 20){
+    //                 speed_wheel2 += 5;
+    //                 uart_println("time: ");
+    //                 uart_println(ulong_to_char((millis() - start_sp) / 1000));
+    //                 uart_println("speed wheel 2");
+    //                 uart_println(ulong_to_char(speed_wheel2));
+                    
+    //                 motor_run(speed_wheel1, speed_wheel2);
+    //                 // uart_println(ulong_to_char(speed_wheel1));
+    //                 // uart_println(ulong_to_char(speed_wheel2));
+    //                 // uart_println("value millis: ");
+    //                 // uart_println(ulong_to_char(millis()));
+    //                 // uart_println("value start: ");
+    //                 // uart_println(ulong_to_char(start_sp));
+    //                 start_sp = millis();
+    //                 ratio = speed_wheel2 / speed_wheel1;
+    //             }
+    //         }
+    // }
+    //-----------------------
 
     // while (1){
     //     motor_run(SPEED_MAX, SPEED_MAX);
     // }
-
 
     unsigned char speed_wheel1 = 0, speed_wheel2 = 0;
     motor_run(speed_wheel1, speed_wheel2);
     int time_ran; // variable to get random time
     bool random_check = false; // check whether robot was in random mode
 
-    
 
     while (1) {
 
@@ -167,11 +210,17 @@ int main(void){
         }
 
         if (random_check == true){
-            dis_forward = readSensor(forward_sensor);
+            uart_println("out of random mode");
+            // dis_forward = readSensor(forward_sensor);
+            // dis_right = readSensor(right_sensor);
+            // dis_left = readSensor(left_sensor);
             if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min){
+                motor_run(0, 0);
+                _delay_ms(100);
+                random_check = false;
                 goto random_mode;
             }
-            random_check = false;
+            //random_check = false;
             continue;
         }
         //------------------------------------
@@ -179,10 +228,10 @@ int main(void){
         random_mode:
             uart_println("random mode");
             time_ran = rand() % 16; // value from 0 to 15
-            time_ran *= 50; // convert 0ms to 1500ms 
+            time_ran *= 100; // convert 0ms to 1500ms 
             int start_r;
             start_r = millis();
-            motor_run(0, SPEED_MAX/3);
+            motor_run(0, SPEED_MIN);
 
             
             while (millis() - start_r < time_ran){ // random turn
@@ -190,10 +239,14 @@ int main(void){
             motor_run(0,0); // stop turnning to measure
             //_delay_ms(100);
             dis_forward = readSensor(forward_sensor);
+            dis_right = readSensor(right_sensor);
+            dis_left = readSensor(left_sensor);
             if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min){
+                motor_run(0, 0);
+                _delay_ms(100);
                 goto random_mode;
             }
-            motor_run(SPEED_MAX / 2, SPEED_MAX / 2);
+            motor_run(SPEED_MIN, SPEED_MIN);
             random_check = true;
             continue;
 
@@ -201,7 +254,7 @@ int main(void){
         spiral_mode: 
             uart_println("spiral mode");
             speed_wheel1 = SPEED_MAX / 2;
-            speed_wheel2 = 1;
+            speed_wheel2 = SPEED_MIN;
             motor_run(speed_wheel1, speed_wheel2);
             unsigned long start_sp;
             start_sp = millis();
@@ -211,10 +264,9 @@ int main(void){
                 dis_right = readSensor(right_sensor);
                 dis_backward = readSensor(backward_sensor);
                 dis_left = readSensor(left_sensor);
-                if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min || speed_wheel2 >= SPEED_MAX / 2){
-                    speed_wheel1 = 0;
-                    speed_wheel2 = 0;
-                    motor_run(speed_wheel1, speed_wheel2);
+                if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min || speed_wheel2 >= SPEED_MAX - delta_speed){
+                    motor_run(0, 0);
+                    _delay_ms(100);
                     //_delay_ms(100);
                     goto random_mode;
                 }
@@ -227,13 +279,12 @@ int main(void){
                 //     break;
                 // }
                 //
-                if ((millis() - start_sp) / 1000 >= speed_wheel2){
-                    speed_wheel2 += 2;
-                    int speed_temp = speed_wheel2;
-                    if (speed_wheel2 * 10 < SPEED_MAX / 2){
-                        speed_temp = speed_wheel2 * 10;
-                    }
-                    motor_run(speed_wheel1, speed_temp);
+                if ((millis() - start_sp) / 1000 >= speed_wheel2 / 20){
+                    speed_wheel2 += delta_speed;
+                    if (speed_wheel2 >= SPEED_MAX / 2 - 10){
+                    speed_wheel1 = SPEED_MAX;
+                }
+                    motor_run(speed_wheel1, speed_wheel2);
                     // uart_println(ulong_to_char(speed_wheel1));
                     // uart_println(ulong_to_char(speed_wheel2));
                     // uart_println("value millis: ");
@@ -245,5 +296,4 @@ int main(void){
                 }
             }
     }
-    
 }
