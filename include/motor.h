@@ -1,12 +1,12 @@
 #ifndef motor_h
 #define motor_h
 
-#define servo_pin 1
+#define servo_pin 1 // pb1
 #define PWM1_PIN 3 //pd3
 #define PWM2_PIN 3 //pb3
 #define IN1 4
 #define IN3 5
-#define role_pin 0
+#define role_pin 0 //pb0
 //#define uint8_t unsigned char 
 typedef unsigned char uint8_t;
 //typedef unsigned short int uint16_t;

@@ -10,7 +10,8 @@
 #include "my_time.h"
 #include "motor.h"
 
-#define radius 20   // the minimum distance to run spiral algorithm
+#define radius 10   // the minimum distance to run spiral algorithm
+#define dis_min 3 // minimum distance that sensor sensed
 #define R3 3     // forward sensor
 #define R2 2     // right sensor
 #define R1 1    // backward sensor
@@ -116,7 +117,7 @@ int main(void){
     //     uart_println(ulong_to_char(dis_backward));
     //     uart_println("left: ");
     //     uart_println(ulong_to_char(dis_left));
-    //     _delay_ms(500);
+    //     _delay_ms(100);
     // }
 
     // while (1){
@@ -127,6 +128,7 @@ int main(void){
     unsigned char speed_wheel1 = 0, speed_wheel2 = 0;
     motor_run(speed_wheel1, speed_wheel2);
     int time_ran; // variable to get random time
+    bool random_check = false; // check whether robot was in random mode
 
     
 
@@ -139,53 +141,66 @@ int main(void){
         dis_backward = readSensor(backward_sensor);
         dis_left = readSensor(left_sensor);
 
+
         //-----------------
         // check condition for spiral mode
-        if (dis_forward >= radius){
-            check_register |= (1 << R3);
-        }
-        if (dis_right >= radius){
-            check_register |= (1 << R2);
-        }
-        if (dis_backward >= radius){
-            check_register |= (1 << R1);
-        }
-        if (dis_right >= radius){
-            check_register |= (1 << R0);
-        }
+        // if (dis_forward >= radius){
+        //     check_register |= (1 << R3);
+        // }
+        // if (dis_right >= radius){
+        //     check_register |= (1 << R2);
+        // }
+        // if (dis_backward >= radius){
+        //     check_register |= (1 << R1);
+        // }
+        // if (dis_right >= radius){
+        //     check_register |= (1 << R0);
+        // }
 
         // test spiral mode
         // check_register = 0x0F;
         //
-        if (check_register == 0x0F){ // check the area 
+        if (dis_forward >= radius && dis_right >= radius && dis_backward >= radius && dis_left >= radius){ // check the area 
             motor_run(0, 0);
+            _delay_ms(100);
             goto spiral_mode;
+        }
+
+        if (random_check == true){
+            dis_forward = readSensor(forward_sensor);
+            if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min){
+                goto random_mode;
+            }
+            random_check = false;
+            continue;
         }
         //------------------------------------
 
         random_mode:
-
+            uart_println("random mode");
             time_ran = rand() % 16; // value from 0 to 15
-            time_ran *= 100; // convert 0ms to 1500ms 
+            time_ran *= 50; // convert 0ms to 1500ms 
             int start_r;
             start_r = millis();
-            motor_run(0, SPEED_MAX/4);
+            motor_run(0, SPEED_MAX/3);
 
             
             while (millis() - start_r < time_ran){ // random turn
             };
             motor_run(0,0); // stop turnning to measure
+            //_delay_ms(100);
             dis_forward = readSensor(forward_sensor);
-            if (dis_forward <= 2){
+            if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min){
                 goto random_mode;
             }
-            motor_run(SPEED_MAX, SPEED_MAX);
+            motor_run(SPEED_MAX / 2, SPEED_MAX / 2);
+            random_check = true;
             continue;
 
 
         spiral_mode: 
-
-            speed_wheel1 = SPEED_MAX;
+            uart_println("spiral mode");
+            speed_wheel1 = SPEED_MAX / 2;
             speed_wheel2 = 1;
             motor_run(speed_wheel1, speed_wheel2);
             unsigned long start_sp;
@@ -193,10 +208,14 @@ int main(void){
             float ratio = speed_wheel2 / speed_wheel1;
             while (1) {
                 dis_forward = readSensor(forward_sensor);
-                if (dis_forward <= 2 || speed_wheel2 >= SPEED_MAX / 2){
+                dis_right = readSensor(right_sensor);
+                dis_backward = readSensor(backward_sensor);
+                dis_left = readSensor(left_sensor);
+                if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min || speed_wheel2 >= SPEED_MAX / 2){
                     speed_wheel1 = 0;
                     speed_wheel2 = 0;
                     motor_run(speed_wheel1, speed_wheel2);
+                    //_delay_ms(100);
                     goto random_mode;
                 }
 
@@ -210,7 +229,11 @@ int main(void){
                 //
                 if ((millis() - start_sp) / 1000 >= speed_wheel2){
                     speed_wheel2 += 2;
-                    motor_run(speed_wheel1, speed_wheel2);
+                    int speed_temp = speed_wheel2;
+                    if (speed_wheel2 * 10 < SPEED_MAX / 2){
+                        speed_temp = speed_wheel2 * 10;
+                    }
+                    motor_run(speed_wheel1, speed_temp);
                     // uart_println(ulong_to_char(speed_wheel1));
                     // uart_println(ulong_to_char(speed_wheel2));
                     // uart_println("value millis: ");
@@ -222,4 +245,5 @@ int main(void){
                 }
             }
     }
+    
 }

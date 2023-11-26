@@ -4,16 +4,16 @@
 #include "ultrasonic.h"
 
 // forward_sensor = pc0 pc1
-// right_sensor = pd0 pd1
-// backward_sensor = pd2 pd3
-// left_sensor = pd4 pd5
+// right_sensor = pc2 pc3
+// backward_sensor = pd2 pd4
+// left_sensor = pd5 pd6
 
 void init_ultrasonic(){
     init(); // init timer0 to use millis() and micros() function in time.h
-    DDRD |= (1 << DDD0) | (1 << DDD2) | (1 << DDD5); // set output for trigger pin
-    DDRD &= ~((1 << DDD1) | (1 << DDD4) | (1 << DDD6)); // set input for echo pin
-    DDRC |= (1 << DDC0);
-    DDRC &= ~(1 << DDC1);
+    DDRD |= (1 << DDD2) | (1 << DDD5); // set output for trigger pin
+    DDRD &= ~( (1 << DDD4) | (1 << DDD6)); // set input for echo pin
+    DDRC |= (1 << DDC0) | (1 << DDC2);
+    DDRC &= ~((1 << DDC1) | (1 << DDC3));
 }
 
 float readSensor(unsigned char numSensor)
