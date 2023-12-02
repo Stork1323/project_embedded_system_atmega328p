@@ -11,7 +11,7 @@
 #include "motor.h"
 
 #define radius 10   // the minimum distance to run spiral algorithm
-#define dis_min 3 // minimum distance that sensor sensed
+#define dis_min 5 // minimum distance that sensor sensed
 #define R3 3     // forward sensor
 #define R2 2     // right sensor
 #define R1 1    // backward sensor
@@ -173,7 +173,7 @@ int main(void){
     motor_run(speed_wheel1, speed_wheel2);
     int time_ran; // variable to get random time
     bool random_check = false; // check whether robot was in random mode
-
+    unsigned long start_r2;
 
     while (1) {
 
@@ -218,6 +218,9 @@ int main(void){
                 motor_run(0, 0);
                 _delay_ms(100);
                 random_check = false;
+
+                
+                start_r2 = millis();
                 goto random_mode;
             }
             //random_check = false;
@@ -229,7 +232,7 @@ int main(void){
             uart_println("random mode");
             time_ran = rand() % 16; // value from 0 to 15
             uart_println(ulong_to_char(time_ran));
-            time_ran *= 100; // convert 0ms to 1500ms 
+            time_ran *= 50; // convert 0ms to 1500ms 
             unsigned long start_r;
             start_r = millis();
             motor_run(0, SPEED_MIN);
@@ -245,10 +248,27 @@ int main(void){
             if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min){
                 motor_run(0, 0);
                 _delay_ms(100);
+                if (millis() - start_r2 >= 3000){
+                    PORTB |= ((1 << IN1) | (1 << IN3)); // go back
+                    motor_run(150, 150);
+                    uart_println("go back");
+                    _delay_ms(1000);
+                    PORTB &= ~((1 << IN1) | (1 << IN3)); 
+                    motor_run(SPEED_MIN, 0);
+                    _delay_ms(200);
+                    motor_run(0, 0);
+                    start_r2 = millis();
+
+                }
                 goto random_mode;
             }
             motor_run(SPEED_MIN, SPEED_MIN);
             random_check = true;
+
+            
+            
+            
+
             continue;
 
 
@@ -265,10 +285,11 @@ int main(void){
                 dis_right = readSensor(right_sensor);
                 dis_backward = readSensor(backward_sensor);
                 dis_left = readSensor(left_sensor);
-                if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min || speed_wheel2 >= SPEED_MAX - delta_speed){
+                if (dis_forward <= dis_min || dis_right <= dis_min || dis_left <= dis_min || dis_backward <= dis_min || speed_wheel2 >= SPEED_MAX - delta_speed){
                     motor_run(0, 0);
                     _delay_ms(100);
                     //_delay_ms(100);
+                    start_r2 = millis();
                     goto random_mode;
                 }
 
